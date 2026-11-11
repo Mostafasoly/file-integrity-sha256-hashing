@@ -1,0 +1,94 @@
+# File Integrity Check with SHA-256 Hashing
+
+Two files that look identical can still be different. This lab shows how to prove it with a hash.
+
+## Overview
+
+A hash function turns any input into a fixed-length digest. Change a single byte of the input and the digest changes completely. Security analysts use this to confirm whether a file has been modified, tampered with, or swapped for a lookalike.
+
+In this project I investigated two files, `file1.txt` and `file2.txt`, that appear to contain the same data, and checked whether they really are identical.
+
+## Scenario
+
+- **Question:** Are `file1.txt` and `file2.txt` the same file?
+- **Method:** Display the contents, generate a SHA-256 hash for each file, then compare the hashes manually.
+- **Environment:** Linux Bash shell, user `analyst`
+- **Test data:** Both files contain the EICAR standard antivirus test string, a harmless file used to test security tools.
+
+## Tools & Commands
+
+| Command | Purpose |
+|---|---|
+| `ls` | List files in the directory |
+| `cat` | Display file contents |
+| `sha256sum` | Generate a SHA-256 hash |
+| `>>` | Redirect output into a file |
+| `cmp` | Compare two files byte by byte |
+
+## Walkthrough
+
+### 1. Inspect the files
+
+```bash
+ls
+cat file1.txt
+cat file2.txt
+```
+
+The output of both files looks identical to the eye.
+
+### 2. Generate the hashes
+
+```bash
+sha256sum file1.txt
+sha256sum file2.txt
+```
+
+```
+131f95c51cc819465fa1797f6ccacf9d494aaaff46fa3eac73ae63ffbdfd8267  file1.txt
+2558ba9a4cad1e69804ce03aa2a029526179a91a5e38cb723320e83af9ca017b  file2.txt
+```
+
+The hashes are completely different, so the files are **not** identical.
+
+### 3. Save the hashes and compare them
+
+```bash
+sha256sum file1.txt >> file1hash
+sha256sum file2.txt >> file2hash
+cat file1hash file2hash
+cmp file1hash file2hash
+```
+
+```
+file1hash file2hash differ: char 1, line 1
+```
+
+`cmp` reports the first differing byte. Here that is the very first character of the hash, which is expected: even a one-byte change in the source produces a totally different digest.
+
+## Findings
+
+- Visual inspection with `cat` is **not** a reliable way to verify file integrity.
+- Hashing exposes differences that are invisible on screen, such as altered characters or hidden whitespace.
+- The same principle is used to detect malware that mimics a legitimate program: one changed line gives a different hash.
+
+## Going Further
+
+The `cmp` step in this lab compares the two *hash files*. To locate where the original files differ, run `cmp` on the originals:
+
+```bash
+cmp file1.txt file2.txt
+```
+
+You can also check a file against a known-good value:
+
+```bash
+echo "<expected_hash>  file1.txt" | sha256sum --check
+```
+
+## Skills Demonstrated
+
+- Data integrity verification
+- Linux command line fundamentals
+- Output redirection and file comparison
+- Security analyst workflow: investigate, hash, compare, conclude
